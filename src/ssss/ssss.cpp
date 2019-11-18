@@ -6,7 +6,7 @@ bool Share::isEmpty(){
 
 BIGNUM *SSSS::p;
 
-SSSS::SSSS(unsigned int t, unsigned int n, BIGNUM *secret){
+SSSS::SSSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 	this->t = t;
 	this->n = n;
 
@@ -18,11 +18,11 @@ SSSS::SSSS(unsigned int t, unsigned int n, BIGNUM *secret){
 	// TODO remove def of prime to field of ecc
 	BN_hex2bn(&this->p, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F");
 
-	
+	// TODO export to private function
 	// generate polynomial
 	for(unsigned int i = 0; i < this->t; i++){
 		if(i == 0){
-			this->poly.push_back(secret);
+			this->poly.push_back(BN_dup(secret));
 		}else{
 			BIGNUM *rand = BN_new();
 			BN_rand_range(rand, SSSS::p);
@@ -55,7 +55,7 @@ std::vector<Share> SSSS::generateShares(){
 }
 
 // evaluate the polynomial at x
-BIGNUM *SSSS::evalPoly(BIGNUM *x){
+BIGNUM *SSSS::evalPoly(const BIGNUM *x){
 	BIGNUM *ret = BN_new();
 	BN_CTX *ctx = BN_CTX_new();
 	
@@ -120,7 +120,7 @@ bool SSSS::validShares(std::vector<Share> shares, unsigned int t){
 };
 
 // return the base polynomial of the lagrange interpolation at x
-BIGNUM *SSSS::lagrangeBasePoly(std::vector<Share> shares, BIGNUM *x, int j){
+BIGNUM *SSSS::lagrangeBasePoly(std::vector<Share> shares, const BIGNUM *x, int j){
 	BN_CTX *ctx = BN_CTX_new();
 	BIGNUM *ret = BN_new();
 	BN_copy(ret, BN_value_one());
@@ -160,7 +160,7 @@ BIGNUM *SSSS::lagrangeBasePoly(std::vector<Share> shares, BIGNUM *x, int j){
 }
 
 // return the evaluation interpolated polynomial
-BIGNUM *SSSS::lagrangeInterpolation(std::vector<Share> shares, BIGNUM *x){
+BIGNUM *SSSS::lagrangeInterpolation(std::vector<Share> shares, const BIGNUM *x){
 	BN_CTX *ctx = BN_CTX_new();
 	BIGNUM *ret = BN_new();
 
