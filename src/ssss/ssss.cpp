@@ -6,22 +6,18 @@ bool Share::isEmpty(){
 
 BIGNUM *SSSS::p;
 
-// TODO check errors BN_new == NULL
 SSSS::SSSS(unsigned int t, unsigned int n, BIGNUM *secret){
 	this->t = t;
 	this->n = n;
 
 	if(t > n){
-		// TODO throw error
+		throw std::exception();
 		return;
 	}
 
 	// TODO remove def of prime to field of ecc
-	int err = BN_hex2bn(&this->p, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F");
-	if(err == 0){
-		BN_free(this->p);
-		// TODO throw error
-	}
+	BN_hex2bn(&this->p, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F");
+
 	
 	// generate polynomial
 	for(unsigned int i = 0; i < this->t; i++){
@@ -29,11 +25,7 @@ SSSS::SSSS(unsigned int t, unsigned int n, BIGNUM *secret){
 			this->poly.push_back(secret);
 		}else{
 			BIGNUM *rand = BN_new();
-			int err = BN_rand_range(rand, SSSS::p);
-			if(err == 0){
-				BN_free(rand);
-				// TODO throw error
-			}
+			BN_rand_range(rand, SSSS::p);
 			this->poly.push_back(rand);
 		}
 	}
@@ -63,7 +55,6 @@ std::vector<Share> SSSS::generateShares(){
 }
 
 // evaluate the polynomial at x
-// TODO error check on BN ops
 BIGNUM *SSSS::evalPoly(BIGNUM *x){
 	BIGNUM *ret = BN_new();
 	BN_CTX *ctx = BN_CTX_new();
@@ -97,28 +88,28 @@ BIGNUM *SSSS::evalPoly(BIGNUM *x){
 // assert different and all != 0 x of t shares
 bool SSSS::validShares(std::vector<Share> shares, unsigned int t){
 	if(shares.size() < t){
-		// TODO throw error
+		throw std::exception();
 		return false;
 	}else{
 		for(auto it = shares.begin(); it != shares.end(); it++){
 			if(it->isEmpty()){
-				// TODO throw error
+				throw std::exception();
 				return false;
 			}
 			if(BN_is_zero(it->x)){
-				// TODO throw error
+				throw std::exception();
 				return false;
 			}else{
 				for(auto jt = shares.begin(); jt != shares.end(); jt++){
 					if(jt->isEmpty()){
-						// TODO throw error
+						throw std::exception();
 						return false;
 					}
 					if(it == jt){
 						continue;
 					}
 					if(BN_cmp(it->x, jt->x) == 0){
-						// TODO throw error
+						throw std::exception();
 						return false;
 					}
 				}
@@ -196,7 +187,7 @@ BIGNUM *SSSS::lagrangeInterpolation(std::vector<Share> shares, BIGNUM *x){
 BIGNUM *SSSS::recoverSecret(std::vector<Share> shares){
 	// assert different and all != 0 x of t shares
 	if(!validShares(shares, this->t)){
-		// TODO throw error
+		throw std::exception();
 		return NULL;
 	}
 
