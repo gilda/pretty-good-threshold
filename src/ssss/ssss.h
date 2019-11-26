@@ -30,6 +30,8 @@ class SSSS{
 		// interpolate >t points to find f(0)
 		BIGNUM *recoverSecret(std::vector<Share> shares);
 
+		std::vector<BIGNUM *> getPolynomial();
+
 		~SSSS();
 	private:
 		std::vector<BIGNUM *> poly;

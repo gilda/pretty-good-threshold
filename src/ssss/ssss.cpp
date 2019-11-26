@@ -31,10 +31,16 @@ SSSS::SSSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 	}
 }
 
+std::vector<BIGNUM *> SSSS::getPolynomial(){
+	std::vector<BIGNUM *> ret = this->poly;
+	return ret;
+}
+
 // free all BIGNUMs
 SSSS::~SSSS(){
 	for(auto it = this->poly.begin(); it != this->poly.end(); it++){
-		BN_free(*it);
+		// TODO figure out double free or corruption
+		//BN_free(*it);
 	}
 };
 
