@@ -15,8 +15,8 @@ SSSS::SSSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 		return;
 	}
 
-	// TODO remove def of prime to field of ecc
-	BN_hex2bn(&this->p, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F");
+	// TODO remove def of prime to field of ecc export to static at util
+	BN_hex2bn(&this->p, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141");
 
 	// TODO export to private function
 	// generate polynomial
@@ -29,11 +29,23 @@ SSSS::SSSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 			this->poly.push_back(rand);
 		}
 	}
+
+	this->generateShares();
+}
+
+SSSS::SSSS(){
+	this->t = 0;
+	this->n = 0;
+	this->poly = std::vector<BIGNUM *>();
 }
 
 std::vector<BIGNUM *> SSSS::getPolynomial(){
 	std::vector<BIGNUM *> ret = this->poly;
 	return ret;
+}
+
+std::vector<Share> SSSS::getShares(){
+	return this->shares;
 }
 
 // free all BIGNUMs
@@ -45,7 +57,7 @@ SSSS::~SSSS(){
 };
 
 // returns n shares on polynomial, not at x = 0
-std::vector<Share> SSSS::generateShares(){
+void SSSS::generateShares(){
 	std::vector<Share> ret;
 	
 	// eval n points on curve with x = 1 ... n + 1
@@ -54,10 +66,8 @@ std::vector<Share> SSSS::generateShares(){
 		p.x = BN_new();
 		BN_dec2bn(&p.x, std::to_string(i).c_str());
 		p.y = this->evalPoly(p.x);
-		ret.push_back(p);
+		this->shares.push_back(p);
 	}
-
-	return ret;
 }
 
 // evaluate the polynomial at x

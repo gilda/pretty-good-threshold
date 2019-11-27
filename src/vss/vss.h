@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <openssl/ssl.h>
 #include <openssl/bn.h>
 #include <openssl/ec.h>
 #include "../ssss/ssss.h"
@@ -10,13 +11,17 @@ class VSS{
 	public:
 		unsigned int n;
 		unsigned int t;
-		
-		VSS(unsigned int t, unsigned int n, BIGNUM *secret);
-		std::vector<EC_POINT> generateCommitments();
-		bool verifyShare(Share share);
-		std::vector<Share> generateShares();
+
+		VSS(unsigned int t, unsigned int n, const BIGNUM *secret);
+		bool verifyShare(const Share share);
+		std::vector<Share> getShares();
 		BIGNUM *recoverSecret(std::vector<Share> shares);
+
+		std::vector<EC_POINT *> getCommitments();
+		void setCommitments(std::vector<EC_POINT *> commitments);
 	
 	private:
-		SSSS secretSharing = SSSS(this->t, this->n, NULL);
+		std::vector<EC_POINT *> commitments;
+		void generateCommitments();
+		SSSS secretSharing;
 };
