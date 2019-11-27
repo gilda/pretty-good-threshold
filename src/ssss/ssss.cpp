@@ -4,8 +4,6 @@ bool Share::isEmpty(){
 	return this->x == NULL || this->y == NULL;
 }
 
-BIGNUM *SSSS::p;
-
 SSSS::SSSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 	this->t = t;
 	this->n = n;
@@ -17,18 +15,8 @@ SSSS::SSSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 
 	// TODO remove def of prime to field of ecc export to static at util
 	BN_hex2bn(&this->p, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141");
-
-	// TODO export to private function
-	// generate polynomial
-	for(unsigned int i = 0; i < this->t; i++){
-		if(i == 0){
-			this->poly.push_back(BN_dup(secret));
-		}else{
-			BIGNUM *rand = BN_new();
-			BN_rand_range(rand, SSSS::p);
-			this->poly.push_back(rand);
-		}
-	}
+	
+	this->generatePoly(secret);
 
 	this->generateShares();
 }
@@ -37,6 +25,19 @@ SSSS::SSSS(){
 	this->t = 0;
 	this->n = 0;
 	this->poly = std::vector<BIGNUM *>();
+}
+
+BIGNUM *SSSS::p;
+
+// lagrange interpolate over t shares
+BIGNUM *SSSS::recoverSecret(std::vector<Share> shares){
+	// assert different and all != 0 x of t shares
+	if(!validShares(shares, this->t)){
+		throw std::exception();
+		return NULL;
+	}
+
+	return lagrangeInterpolation(shares, BN_new());
 }
 
 std::vector<BIGNUM *> SSSS::getPolynomial(){
@@ -48,6 +49,18 @@ std::vector<Share> SSSS::getShares(){
 	return this->shares;
 }
 
+BIGNUM *SSSS::getP(){
+	return p;
+} 
+
+unsigned int SSSS::getN(){
+	return this->n;
+}
+
+unsigned int SSSS::getT(){
+	return this->t;
+}
+
 // free all BIGNUMs
 SSSS::~SSSS(){
 	for(auto it = this->poly.begin(); it != this->poly.end(); it++){
@@ -55,6 +68,19 @@ SSSS::~SSSS(){
 		//BN_free(*it);
 	}
 };
+
+void SSSS::generatePoly(const BIGNUM *secret){
+	// generate polynomial
+	for(unsigned int i = 0; i < this->t; i++){
+		if(i == 0){
+			this->poly.push_back(BN_dup(secret));
+		}else{
+			BIGNUM *rand = BN_new();
+			BN_rand_range(rand, SSSS::p);
+			this->poly.push_back(rand);
+		}
+	}
+}
 
 // returns n shares on polynomial, not at x = 0
 void SSSS::generateShares(){
@@ -197,15 +223,4 @@ BIGNUM *SSSS::lagrangeInterpolation(std::vector<Share> shares, const BIGNUM *x){
 
 	BN_CTX_free(ctx);
 	return ret;
-}
-
-// lagrange interpolate over t shares
-BIGNUM *SSSS::recoverSecret(std::vector<Share> shares){
-	// assert different and all != 0 x of t shares
-	if(!validShares(shares, this->t)){
-		throw std::exception();
-		return NULL;
-	}
-
-	return lagrangeInterpolation(shares, BN_new());
 }

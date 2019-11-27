@@ -5,23 +5,29 @@
 #include <openssl/ec.h>
 #include "../ssss/ssss.h"
 
-// TODO generate getters, setters and make all members private
-// TODO comment
 class VSS{
 	public:
+		// init params and create commitments
+		VSS(unsigned int t, unsigned int n, const BIGNUM *secret);
+		
+		// verify a share using feldman VSS
+		bool verifyShare(const Share share);
+		
+		// return the recovered secret while verifieng each share
+		BIGNUM *recoverSecret(std::vector<Share> shares);
+	
+		// getters
+		std::vector<Share> getShares();
+		std::vector<EC_POINT *> getCommitments();
+		unsigned int getN();
+		unsigned int getT();
+
+	private:
 		unsigned int n;
 		unsigned int t;
-
-		VSS(unsigned int t, unsigned int n, const BIGNUM *secret);
-		bool verifyShare(const Share share);
-		std::vector<Share> getShares();
-		BIGNUM *recoverSecret(std::vector<Share> shares);
-
-		std::vector<EC_POINT *> getCommitments();
-		void setCommitments(std::vector<EC_POINT *> commitments);
-	
-	private:
 		std::vector<EC_POINT *> commitments;
-		void generateCommitments();
 		SSSS secretSharing;
+
+		// generate the g^poly[i] commitments
+		void generateCommitments();
 };
