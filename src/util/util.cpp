@@ -18,3 +18,7 @@ void cleanupOpenSSL() {
 	EVP_cleanup();
 	CRYPTO_cleanup_all_ex_data();
 }
+
+void handleErros(){
+	ERR_print_errors_fp(stdout);
+}
