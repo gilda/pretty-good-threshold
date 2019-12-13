@@ -19,6 +19,6 @@ void cleanupOpenSSL() {
 	CRYPTO_cleanup_all_ex_data();
 }
 
-void handleErros(){
+void handleErrors(){
 	ERR_print_errors_fp(stdout);
 }
