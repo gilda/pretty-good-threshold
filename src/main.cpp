@@ -1,7 +1,8 @@
 #include <iostream>
-#include "util/util.h"
 #include "ssss/ssss.h"
 #include "vss/vss.h"
+#include "aes/aes.h"
+#include "util/util.h"
 
 int main(){
 	initOpenSSL();

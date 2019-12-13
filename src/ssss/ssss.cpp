@@ -14,7 +14,7 @@ SSSS::SSSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 	}
 
 	// TODO remove def of prime to field of ecc export to static at util
-	BN_hex2bn(&this->p, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141");
+	if(BN_hex2bn(&this->p, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141") == 0) handleErrors();
 	
 	this->generatePoly(secret);
 
@@ -73,10 +73,15 @@ void SSSS::generatePoly(const BIGNUM *secret){
 	// generate polynomial
 	for(unsigned int i = 0; i < this->t; i++){
 		if(i == 0){
-			this->poly.push_back(BN_dup(secret));
+			BIGNUM *a = BN_dup(secret);
+			if(a == NULL) {}
+			
+			this->poly.push_back(a);
 		}else{
 			BIGNUM *rand = BN_new();
-			BN_rand_range(rand, SSSS::p);
+			if(rand == NULL) {}
+			
+			if(BN_rand_range(rand, SSSS::p) == 0) {}
 			this->poly.push_back(rand);
 		}
 	}
@@ -90,7 +95,10 @@ void SSSS::generateShares(){
 	for(unsigned int i = 1; i < this->n + 1; i++){
 		Share p;
 		p.x = BN_new();
-		BN_dec2bn(&p.x, std::to_string(i).c_str());
+		if(p.x == NULL) {}
+		
+		if(BN_dec2bn(&p.x, std::to_string(i).c_str()) == 0) {}
+		
 		p.y = this->evalPoly(p.x);
 		this->shares.push_back(p);
 	}
@@ -99,22 +107,32 @@ void SSSS::generateShares(){
 // evaluate the polynomial at x
 BIGNUM *SSSS::evalPoly(const BIGNUM *x){
 	BIGNUM *ret = BN_new();
+	if(ret == NULL) {}
+	
 	BN_CTX *ctx = BN_CTX_new();
+	if(ctx == NULL) {}
 	
 	for(unsigned int i = 0; i < this->t; i++){
 		// xEval = x^i % p
 		BIGNUM *iBN = BN_new();
+		if(iBN == NULL) {}
+
 		BIGNUM *xEval = BN_new();
-		BN_dec2bn(&iBN, std::to_string(i).c_str());
-		BN_mod_exp(xEval, x, iBN, this->p, ctx);
+		if(xEval == NULL) {}
+		
+		if(BN_dec2bn(&iBN, std::to_string(i).c_str()) == 0) {}
+		if(BN_mod_exp(xEval, x, iBN, this->p, ctx) == 0) {}
 
 		// paramBN = poly[i] * xEval % p
 		BIGNUM *paramBN = BN_new();
+		if(paramBN == NULL) {}
 		BN_mod_mul(paramBN, this->poly.at(i), xEval, this->p, ctx);
 		
 		// ret = final + paramBN % p
 		BIGNUM *final = BN_dup(ret);
-		BN_mod_add(ret, final, paramBN, this->p, ctx);
+		if(final == NULL) {}
+		
+		if(BN_mod_add(ret, final, paramBN, this->p, ctx) == 0) {}
 	
 		// free intermediate values
 		BN_free(xEval);
@@ -164,38 +182,58 @@ bool SSSS::validShares(std::vector<Share> shares, unsigned int t){
 // return the base polynomial of the lagrange interpolation at x
 BIGNUM *SSSS::lagrangeBasePoly(std::vector<Share> shares, const BIGNUM *x, int j){
 	BN_CTX *ctx = BN_CTX_new();
+	if(ctx == NULL) {}
+	
+	// ret = 1
 	BIGNUM *ret = BN_new();
-	BN_copy(ret, BN_value_one());
+	if(ret == NULL) {}
+	
+	if(BN_copy(ret, BN_value_one()) == NULL) {}
+	
 	BIGNUM *jBN = BN_new();
-	BN_dec2bn(&jBN, std::to_string(j).c_str());
+	if(jBN == NULL) {}
+	
+	if(BN_dec2bn(&jBN, std::to_string(j).c_str()) == 0) {}
 	
 	for(unsigned int m = 0; m < this->t; m++){
 		// m == j continue;
 		BIGNUM *mBN = BN_new();
-		BN_dec2bn(&mBN, std::to_string(m).c_str());
+		if(mBN == NULL) {}
+		
+		if(BN_dec2bn(&mBN, std::to_string(m).c_str()) == 0) {}
 		if(BN_cmp(jBN, mBN) == 0){
 			continue;
 		}
 
 		// nomi = x - xm % p
 		BIGNUM *nomi = BN_new();
-		BN_mod_sub(nomi, x, shares.at(m).x, this->p, ctx);
+		if(nomi == NULL) {}
+
+		if(BN_mod_sub(nomi, x, shares.at(m).x, this->p, ctx) == 0) {}
 
 		// denomi = xj -xm % p
 		BIGNUM *denomi = BN_new();
-		BN_mod_sub(denomi, shares.at(j).x, shares.at(m).x, this->p, ctx);
+		if(denomi == NULL) {}
+
+		if(BN_mod_sub(denomi, shares.at(j).x, shares.at(m).x, this->p, ctx) == 0) {}
 
 		// inverse = denomi ^ -1 % p
 		BIGNUM *inverse = BN_new();
-		BN_mod_inverse(inverse, denomi, this->p, ctx);
+		if(inverse == NULL) {}
+
+		if(BN_mod_inverse(inverse, denomi, this->p, ctx) == 0) {}
 
 		// frac = nomi * inverse % p
 		BIGNUM *frac = BN_new();
-		BN_mod_mul(frac, nomi, inverse, this->p, ctx);
+		if(frac == NULL) {}
+
+		if(BN_mod_mul(frac, nomi, inverse, this->p, ctx) == 0) {}
 
 		// ret = temp * frac
 		BIGNUM *temp = BN_dup(ret);
-		BN_mod_mul(ret, temp, frac, this->p, ctx);
+		if(temp == NULL) {}
+
+		if(BN_mod_mul(ret, temp, frac, this->p, ctx) == 0) {}
 	}
 
 	return ret;
@@ -204,17 +242,24 @@ BIGNUM *SSSS::lagrangeBasePoly(std::vector<Share> shares, const BIGNUM *x, int j
 // return the evaluation interpolated polynomial
 BIGNUM *SSSS::lagrangeInterpolation(std::vector<Share> shares, const BIGNUM *x){
 	BN_CTX *ctx = BN_CTX_new();
+	if(ctx == NULL) {}
+
 	BIGNUM *ret = BN_new();
+	if(ret == NULL) {}
 
 	for(unsigned int j = 0; j < this->t; j++){
 		// mult = yj*lj(x)
 		BIGNUM *mult = BN_new();
+		if(mult == NULL) {}
+
 		BIGNUM *ljx = lagrangeBasePoly(shares, x, j);
-		BN_mod_mul(mult, shares.at(j).y, ljx, this->p, ctx);
+		if(BN_mod_mul(mult, shares.at(j).y, ljx, this->p, ctx) == 0) {}
 
 		// ret = temp + mult
 		BIGNUM *temp = BN_dup(ret);
-		BN_mod_add(ret, temp, mult, this->p, ctx);
+		if(temp == NULL) {}
+
+		if(BN_mod_add(ret, temp, mult, this->p, ctx) == 0) {}
 
 		BN_free(mult);
 		BN_free(ljx);

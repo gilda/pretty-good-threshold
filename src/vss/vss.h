@@ -4,6 +4,7 @@
 #include <openssl/bn.h>
 #include <openssl/ec.h>
 #include "../ssss/ssss.h"
+#include "../util/util.h"
 
 class VSS{
 	public:

@@ -9,32 +9,41 @@ VSS::VSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 
 bool VSS::verifyShare(const Share share){
 	BN_CTX *ctx = BN_CTX_new();
+	if(ctx == NULL) handleErrors();
+
 	EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp256k1);
-	if(group == NULL){
-		printf("Not a valid name\n");
-	}
+	if(group == NULL) handleErrors();
 	
 	EC_POINT *target = EC_POINT_new(group);
+	if(target == NULL) handleErrors();
 
 	// target = g^share.y
-	EC_POINT_mul(group, target, share.y, NULL, NULL, ctx);
+	if(EC_POINT_mul(group, target, share.y, NULL, NULL, ctx) == 0) handleErrors();
 
 	EC_POINT *commitPowered = EC_POINT_new(group);
+	if(commitPowered == NULL) handleErrors();
+
 	BIGNUM *iBN = BN_new();
+	if(iBN == NULL) handleErrors();
+
 	BIGNUM *xPowered = BN_new();
+	if(xPowered == NULL) handleErrors();
+
 	EC_POINT *verify = EC_POINT_new(group);
+	if(verify == NULL) handleErrors();
+
 	
 	for(unsigned int i = 0; i < this->commitments.size(); i++){
-		BN_dec2bn(&iBN, std::to_string(i).c_str());
+		if(BN_dec2bn(&iBN, std::to_string(i).c_str()) == 0) handleErrors();
 
 		// xPowered = share.x^i
-		BN_mod_exp(xPowered, share.x, iBN, SSSS::getP(), ctx);
+		if(BN_mod_exp(xPowered, share.x, iBN, SSSS::getP(), ctx) == 0) handleErrors();
 		
 		// commitPowered = commitment[i]^xPowred
-		EC_POINT_mul(group, commitPowered, NULL, this->commitments.at(i), xPowered, ctx);
+		if(EC_POINT_mul(group, commitPowered, NULL, this->commitments.at(i), xPowered, ctx) == 0) handleErrors();
 		
 		// verify = verify + commitPowered
-		EC_POINT_add(group, verify, verify, commitPowered, ctx);
+		if(EC_POINT_add(group, verify, verify, commitPowered, ctx) == 0) handleErrors();
 	}
 
 	// ret = cmp(verify, target)
@@ -76,19 +85,19 @@ unsigned int VSS::getT(){
 
 void VSS::generateCommitments(){
 	BN_CTX *ctx = BN_CTX_new();
+	if(ctx == NULL) handleErrors();
 	
 	// TODO export group to static at util
 	EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp256k1);
-	if(group == NULL){
-		printf("Not a valid name\n");
-	}
+	if(group == NULL) handleErrors();
 
 	// commit to the polynomial paramaters
 	for(unsigned int i = 0; i < this->secretSharing.getPolynomial().size(); i++){	
 		EC_POINT *commit = EC_POINT_new(group);
+		if(commit == NULL) handleErrors();
 
 		// commit = g^poly[i]
-		EC_POINT_mul(group, commit, this->secretSharing.getPolynomial().at(i), NULL, NULL, ctx);
+		if(EC_POINT_mul(group, commit, this->secretSharing.getPolynomial().at(i), NULL, NULL, ctx) == 0) handleErrors();
 
 		this->commitments.push_back(commit);
 	}

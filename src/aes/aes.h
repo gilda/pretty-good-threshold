@@ -1,5 +1,6 @@
 #pragma once
 #include <openssl/evp.h>
+#include "../util/util.h"
 
 namespace AES{
 	int encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *iv, unsigned char *ciphertext);

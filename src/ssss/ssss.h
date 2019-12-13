@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <openssl/bn.h>
+#include "../util/util.h"
 
 class Share{
 	public:
