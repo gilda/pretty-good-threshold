@@ -12,8 +12,12 @@ namespace AES{
 		int len;
 		int ciphertext_len;
 
+
 		/* Create and initialise the context */
 		if(!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
+		
+		// validate input
+		if(EVP_CIPHER_iv_length(EVP_aes_256_gcm()) != iv_len) return 0;
 
 		/* Initialise the encryption operation. */
 		if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL)) handleErrors();
@@ -76,6 +80,9 @@ namespace AES{
 		int plaintext_len;
 		int ret;
 
+		// validate input
+		if(EVP_CIPHER_iv_length(EVP_aes_256_gcm()) != iv_len) return 0;
+
 		/* Create and initialise the context */
 		if(!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
 
@@ -132,7 +139,9 @@ namespace AES{
 		std::string ret;
 		ret.reserve(ciphertext_len);
 		
-		gcm_decrypt(ciphertext, ciphertext_len, (unsigned char *)aad.c_str(), aad.length(), tag, key, iv, iv_len, (unsigned char *)&ret[0]);
-		return ret;
+		// TODO throw that it is an invalid tag
+		int len = gcm_decrypt(ciphertext, ciphertext_len, (unsigned char *)aad.c_str(), aad.length(), tag, key, iv, iv_len, (unsigned char *)&ret[0]);
+		if(len == -1) return "";
+		return std::string(ret.c_str()).substr(0, len);
 	}
 }
