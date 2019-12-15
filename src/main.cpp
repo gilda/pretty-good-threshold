@@ -7,6 +7,7 @@
 #include "ecies/ecies.h"
 
 // TODO make sure all keys are OPENSSL_secure_malloc()
+// TODO comment aes ecdh ecies
 
 int main(){
 	initOpenSSL();
@@ -17,20 +18,29 @@ int main(){
 
 	SSSS gilda = SSSS(3, 5, a);
 	std::vector<Share> points = gilda.getShares();
-	
 	for(auto it = points.begin(); it != points.end(); it++){
 		printf("x = %s, y = %s\n", BN_bn2hex(it->x), BN_bn2hex(it->y));
 	}
-
 	printf("f(0) = %s\n\n", BN_bn2hex(gilda.recoverSecret(points)));
 
-	// VSS TODO get real test out of it
+	// VSS
+	// TODO figure out bad primes or why it is not working
+	// TODO consider re implemting entire VSS code as it is small
+	// TODO all poly cooefficients are mod q and eval mod q, elliptic curve mod p
+	// TODO find q such that q|p-1
 	VSS feld = VSS(4, 5, BN_dup(a));
+	std::vector<Share> vssPoints = feld.getShares();
 	Share fake;
 	fake.x = BN_new();
 	fake.y = BN_new();
-	BN_one(fake.y);
-	feld.verifyShare(fake);
+	BN_set_word(fake.x, 2);
+	BN_set_word(fake.y, 2);
+	printf("real share #0: %s\n", feld.verifyShare(vssPoints.at(0)) ? "valid share" : "invalid share");
+	printf("real share #1: %s\n", feld.verifyShare(vssPoints.at(1)) ? "valid share" : "invalid share");
+	printf("real share #2: %s\n", feld.verifyShare(vssPoints.at(2)) ? "valid share" : "invalid share");
+	printf("real share #3: %s\n", feld.verifyShare(vssPoints.at(3)) ? "valid share" : "invalid share");
+	printf("real share #4: %s\n", feld.verifyShare(vssPoints.at(4)) ? "valid share" : "invalid share");
+	printf("fake share: %s\n\n", feld.verifyShare(fake) ? "valid share" : "invalid share");
 
 	// AES-GCM
 	std::string aesPtext = "aes works!";

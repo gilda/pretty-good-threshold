@@ -15,7 +15,7 @@ SSSS::SSSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 
 	// TODO remove def of prime to field of ecc export to static at util
 	if(BN_hex2bn(&this->p, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141") == 0) handleErrors();
-	
+
 	this->generatePoly(secret);
 
 	this->generateShares();
@@ -74,12 +74,12 @@ void SSSS::generatePoly(const BIGNUM *secret){
 	for(unsigned int i = 0; i < this->t; i++){
 		if(i == 0){
 			BIGNUM *a = BN_dup(secret);
-			if(a == NULL) {}
+			if(a == NULL) handleErrors();
 			
 			this->poly.push_back(a);
 		}else{
 			BIGNUM *rand = BN_new();
-			if(rand == NULL) {}
+			if(rand == NULL) handleErrors();
 			
 			if(BN_rand_range(rand, SSSS::p) == 0) {}
 			this->poly.push_back(rand);

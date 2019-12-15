@@ -5,6 +5,7 @@ VSS::VSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 	this->n = n;
 	this->secretSharing = SSSS(t, n, secret);
 	this->generateCommitments();
+
 }
 
 bool VSS::verifyShare(const Share share){
@@ -31,14 +32,13 @@ bool VSS::verifyShare(const Share share){
 
 	EC_POINT *verify = EC_POINT_new(group);
 	if(verify == NULL) handleErrors();
-
 	
 	for(unsigned int i = 0; i < this->commitments.size(); i++){
 		if(BN_dec2bn(&iBN, std::to_string(i).c_str()) == 0) handleErrors();
 
 		// xPowered = share.x^i
 		if(BN_mod_exp(xPowered, share.x, iBN, SSSS::getP(), ctx) == 0) handleErrors();
-		
+
 		// commitPowered = commitment[i]^xPowred
 		if(EC_POINT_mul(group, commitPowered, NULL, this->commitments.at(i), xPowered, ctx) == 0) handleErrors();
 		
@@ -47,8 +47,11 @@ bool VSS::verifyShare(const Share share){
 	}
 
 	// ret = cmp(verify, target)
-	bool ret = EC_POINT_cmp(group, verify, target, ctx) == 0; 
-	
+	int intRet = EC_POINT_cmp(group, verify, target, ctx); 
+	if(intRet == -1){
+		handleErrors();
+	}
+
 	// cleanup
 	BN_CTX_free(ctx);
 	EC_GROUP_free(group);
@@ -58,7 +61,7 @@ bool VSS::verifyShare(const Share share){
 	BN_free(xPowered);
 
 	// return result
-	return ret;
+	return intRet == 0;
 }
 
 // TODO verify each share
