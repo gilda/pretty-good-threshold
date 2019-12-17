@@ -1,4 +1,4 @@
-all: bin/ssss.o bin/vss.o bin/aes.o bin/ecdh.o bin/ecies.o bin/sha256.o bin/util.o
+all: bin/ssss.o bin/vss.o bin/aes.o bin/ecdh.o bin/ecies.o bin/sha256.o bin/ecdsa.o bin/util.o
 	g++ -Wall src/main.cpp $^ -lssl -lcrypto -o bin/pretty-good-threshold
 
 bin/util.o: src/util/util.h src/util/util.cpp
@@ -21,3 +21,6 @@ bin/ecies.o: src/ecies/ecies.h src/ecies/ecies.cpp
 
 bin/sha256.o: src/sha256/sha256.h src/sha256/sha256.cpp
 	g++ -c -Wall src/sha256/sha256.cpp -lssl -lcrypto -o bin/sha256.o
+
+bin/ecdsa.o: src/ecdsa/ecdsa.h src/ecdsa/ecdsa.cpp
+	g++ -c -Wall src/ecdsa/ecdsa.cpp -lssl -lcrypto -o bin/ecdsa.o
