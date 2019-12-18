@@ -5,6 +5,9 @@
 #include "aes/aes.h"
 #include "ecdh/ecdh.h"
 #include "ecies/ecies.h"
+#include "sha256/sha256.h"
+#include "ecdsa/ecdsa.h"
+
 
 // TODO make sure all keys are OPENSSL_secure_malloc()
 // TODO comment aes ecdh ecies
@@ -15,7 +18,6 @@ int main(){
 	// SSSS
 	BIGNUM *a = BN_new();
 	BN_hex2bn(&a, "17263ba6bff76");
-
 	SSSS gilda = SSSS(3, 5, a);
 	std::vector<Share> points = gilda.getShares();
 	for(auto it = points.begin(); it != points.end(); it++){
@@ -24,10 +26,6 @@ int main(){
 	printf("f(0) = %s\n\n", BN_bn2hex(gilda.recoverSecret(points)));
 
 	// VSS
-	// TODO figure out bad primes or why it is not working
-	// TODO consider re implemting entire VSS code as it is small
-	// TODO all poly cooefficients are mod q and eval mod q, elliptic curve mod p
-	// TODO find q such that q|p-1
 	VSS feld = VSS(4, 5, BN_dup(a));
 	std::vector<Share> vssPoints = feld.getShares();
 	Share fake;
@@ -54,7 +52,6 @@ int main(){
 	std::string obt = AES::gcm_decrypt(ctext, ctextlen, "", tag, key, iv, 12);
 	printf("obt: %s\n\n", obt.c_str());
 
-
 	// ECDH
 	EC_KEY *ecKey = EC_KEY_new_by_curve_name(NID_secp256k1);
 	EC_KEY_generate_key(ecKey);
@@ -75,6 +72,17 @@ int main(){
 	printf("ctextlen: %d\nctext: %s\n", ctextlen, encodeHex(eciesCtext, eciesCtextlen).c_str());
 	std::string eciesObt = test.decrypt(eciesCtext, eciesCtextlen, "", eciesTag, eciesIv, 12);
 	printf("obt: %s\n\n", eciesObt.c_str());
+
+	// SHA256
+	std::string hashedData = "gilda";
+	unsigned char *md = HASH::sha256((unsigned char *)hashedData.c_str(), hashedData.length());
+	printf("SHA256(\"gilda\") = %s\n", encodeHex(md, SHA256_DIGEST_LENGTH).c_str());
+
+	// ECDSA
+	std::string sigData = "gilda";
+	unsigned char *sig = ECDSA::sign((unsigned char *)sigData.c_str(), sigData.length(), ecKey);
+	printf("signature is: %s\n", (char *)sig);
+	printf("signature is: %s\n", ECDSA::verify((unsigned char *)sigData.c_str(), sigData.length(), ecKey, sig) ? "valid" : "invalid");
 
 	cleanupOpenSSL();
 	return 0;
