@@ -1,5 +1,65 @@
 #include "aes.h"
 
+// wrapper for encrypting
+// TODO check for NULLs
+// TODO calc ctext len by ptext len
+AESEncrypter::AESEncrypter(unsigned char *key, int iv_len){
+	this->key = key;
+	this->iv_len = iv_len;
+}
+
+// create random iv and clean tag
+void AESEncrypter::prepare(){
+	this->iv = randomPrivateBytes(this->iv_len);
+	this->tag = new unsigned char[16];
+}
+
+// clear iv and tag (redundent)
+void AESEncrypter::flush(){
+	this->iv = NULL;
+	this->tag = NULL;
+}
+
+// main function to encrypt
+int AESEncrypter::encrypt(std::string plaintext,
+                		  std::string aad,
+                		  unsigned char *ciphertext){
+
+	this->prepare();
+	int ret = AES::gcm_encrypt(plaintext, aad, this->key, this->iv, this->iv_len, ciphertext, this->tag);	
+	return ret;
+}
+
+unsigned char *AESEncrypter::getIv(){
+	return this->iv;
+}
+
+unsigned char *AESEncrypter::getTag(){
+	return this->tag;
+}
+
+// wrapper for decrypting
+// TODO check for NULLs
+AESDecrypter::AESDecrypter(unsigned char *key, int iv_len){
+	this->key = key;
+	this->iv_len = iv_len;
+}
+
+// main function to decrypt
+std::string AESDecrypter::decrypt(unsigned char *ciphertext, int ciphertext_len,
+                			std::string aad){
+
+	return AES::gcm_decrypt(ciphertext, ciphertext_len, aad, this->tag, this->key, this->iv, this->iv_len);
+}
+
+void AESDecrypter::setIv(unsigned char *iv){
+	this->iv = iv;
+}
+
+void AESDecrypter::setTag(unsigned char *tag){
+	this->tag = tag;
+}
+
 // TODO make sure key is 256 bit and iv is 128 bit
 namespace AES{
 	int gcm_encrypt(unsigned char *plaintext, int plaintext_len,

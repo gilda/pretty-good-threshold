@@ -11,6 +11,7 @@
 
 // TODO make sure all keys are OPENSSL_secure_malloc()
 // TODO comment aes ecdh ecies
+// TODO refactor to two entities ({prover, verifier}, {encrypter, decrypter}, {dealer, player})
 
 int main(){
 	initOpenSSL();
@@ -43,13 +44,15 @@ int main(){
 	// AES-GCM
 	std::string aesPtext = "aes works!";
 	unsigned char ctext[((aesPtext.length() / 16 + 1)*16)];
-	unsigned char tag[16];
 	unsigned char *key = randomPrivateBytes(32);
-	unsigned char *iv = randomPrivateBytes(12);
-	printf("key: %s\niv: %s\n", encodeHex(key, 32).c_str(), encodeHex(iv, 12).c_str());
-	int ctextlen = AES::gcm_encrypt(aesPtext, "", key, iv, 12, ctext, tag);
+	printf("ptext: %s\n", aesPtext.c_str());
+	AESEncrypter encrypter = AESEncrypter(key, 12);
+	AESDecrypter decrypter = AESDecrypter(key, 12);
+	int ctextlen = encrypter.encrypt(aesPtext, "", ctext);
 	printf("ctextlen: %d\nctext: %s\n", ctextlen, encodeHex(ctext, ctextlen).c_str());
-	std::string obt = AES::gcm_decrypt(ctext, ctextlen, "", tag, key, iv, 12);
+	decrypter.setIv(encrypter.getIv());
+	decrypter.setTag(encrypter.getTag());
+	std::string obt = decrypter.decrypt(ctext, ctextlen, "");
 	printf("obt: %s\n\n", obt.c_str());
 
 	// ECDH
@@ -83,6 +86,8 @@ int main(){
 	unsigned char *sig = ECDSA::sign((unsigned char *)sigData.c_str(), sigData.length(), ecKey);
 	printf("signature is: %s\n", (char *)sig);
 	printf("signature is: %s\n", ECDSA::verify((unsigned char *)sigData.c_str(), sigData.length(), ecKey, sig) ? "valid" : "invalid");
+
+	// DKG
 
 	cleanupOpenSSL();
 	return 0;
