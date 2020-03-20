@@ -269,3 +269,27 @@ BIGNUM *SSSS::lagrangeInterpolation(std::vector<Share> shares, const BIGNUM *x){
 	BN_CTX_free(ctx);
 	return ret;
 }
+
+SSSSDealer::SSSSDealer(unsigned int t, unsigned int n, const BIGNUM *secret){
+	this->ssss = new SSSS(t, n, secret);
+}
+
+std::vector<Share> SSSSDealer::getShares(){
+	return this->ssss->getShares();
+}
+
+SSSSReconstructor::SSSSReconstructor(unsigned int t, unsigned int n){
+	this->ssss = new SSSS(t, n, BN_new());
+}
+
+void SSSSReconstructor::addShare(Share share){
+	this->shares.push_back(share);
+}
+
+void SSSSReconstructor::setShares(std::vector<Share> shares){
+	this->shares = shares;
+}
+
+BIGNUM *SSSSReconstructor::recoverSecret(){
+	return this->ssss->recoverSecret(this->shares);
+}

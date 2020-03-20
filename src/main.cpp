@@ -19,12 +19,16 @@ int main(){
 	// SSSS
 	BIGNUM *a = BN_new();
 	BN_hex2bn(&a, "17263ba6bff76");
-	SSSS gilda = SSSS(3, 5, a);
+	SSSSDealer gilda = SSSSDealer(3, 5, a);
 	std::vector<Share> points = gilda.getShares();
+	SSSSReconstructor gildaConstructor = SSSSReconstructor(3, 5);
+	gildaConstructor.addShare(points.at(0));
+	gildaConstructor.addShare(points.at(2));
+	gildaConstructor.addShare(points.at(4));
 	for(auto it = points.begin(); it != points.end(); it++){
 		printf("x = %s, y = %s\n", BN_bn2hex(it->x), BN_bn2hex(it->y));
 	}
-	printf("f(0) = %s\n\n", BN_bn2hex(gilda.recoverSecret(points)));
+	printf("f(0) = %s\n\n", BN_bn2hex(gildaConstructor.recoverSecret()));
 
 	// VSS
 	VSS feld = VSS(4, 5, BN_dup(a));

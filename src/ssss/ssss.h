@@ -55,3 +55,26 @@ class SSSS{
 		// interpolate the polynomial at x with some shares
 		BIGNUM *lagrangeInterpolation(std::vector<Share> shares, const BIGNUM *x);
 };
+
+// wrapper for application
+class SSSSDealer{
+	private:
+		SSSS *ssss;
+	
+	public:
+		SSSSDealer(unsigned int t, unsigned int n, const BIGNUM *secret);
+		std::vector<Share> getShares();
+};
+
+// wrapper for application
+class SSSSReconstructor{
+	private:
+		SSSS *ssss;
+		std::vector<Share> shares;
+
+	public:
+		SSSSReconstructor(unsigned int t, unsigned int n);
+		void addShare(Share share);
+		void setShares(std::vector<Share> shares);
+		BIGNUM *recoverSecret();
+};
