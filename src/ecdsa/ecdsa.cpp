@@ -23,6 +23,10 @@ unsigned char *ECDSA::sign(unsigned char *data, unsigned int len, EC_KEY *key){
 	return ret;
 }
 
+unsigned char *ECDSA::sign(std::string data, EC_KEY *key){
+	return ECDSA::sign((unsigned char *)data.c_str(), data.length(), key);
+}
+
 bool ECDSA::verify(unsigned char *data, unsigned int len, EC_KEY *key, unsigned char *signature){
 	unsigned char *dgst = HASH::sha256(data, len);
 	ECDSA_SIG *sig = ECDSA_SIG_new();
@@ -43,4 +47,8 @@ bool ECDSA::verify(unsigned char *data, unsigned int len, EC_KEY *key, unsigned 
 	if(ret == -1) handleErrors();
 
 	return ret == 1;
+}
+
+bool ECDSA::verify(std::string data, EC_KEY *key, unsigned char *signature){
+	return ECDSA::verify((unsigned char *)data.c_str(), data.length(), key, signature);
 }

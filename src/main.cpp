@@ -83,9 +83,9 @@ int main(){
 
 	// ECDSA
 	std::string sigData = "gilda";
-	unsigned char *sig = ECDSA::sign((unsigned char *)sigData.c_str(), sigData.length(), ecKey);
+	unsigned char *sig = ECDSA::sign(sigData, ecKey);
 	printf("signature is: %s\n", (char *)sig);
-	printf("signature is: %s\n", ECDSA::verify((unsigned char *)sigData.c_str(), sigData.length(), ecKey, sig) ? "valid" : "invalid");
+	printf("signature is: %s\n", ECDSA::verify(sigData, ecKey, sig) ? "valid" : "invalid");
 
 	// DKG
 
