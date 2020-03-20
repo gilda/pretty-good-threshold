@@ -66,14 +66,14 @@ int main(){
 	printf("secret1: %s\n", encodeHex(secret1, 256/8).c_str());
 
 	// ECIES
-	ECIES test = ECIES(ecKey, peerKey); 
+	ECIES test = ECIES(ecKey, peerKey);
 	std::string eciesPtext = "ecies works!";
 	unsigned char eciesCtext[((eciesPtext.length() / 16 + 1)*16)];
-	unsigned char eciesTag[16];
-	unsigned char *eciesIv = randomPrivateBytes(12);
-	int eciesCtextlen = test.encrypt(eciesPtext, "", eciesIv, 12, eciesCtext, eciesTag);
+	int eciesCtextlen = test.encrypt(eciesPtext, "", eciesCtext);
 	printf("ctextlen: %d\nctext: %s\n", ctextlen, encodeHex(eciesCtext, eciesCtextlen).c_str());
-	std::string eciesObt = test.decrypt(eciesCtext, eciesCtextlen, "", eciesTag, eciesIv, 12);
+	test.setIv(test.getIv());
+	test.setTag(test.getTag());
+	std::string eciesObt = test.decrypt(eciesCtext, eciesCtextlen, "");
 	printf("obt: %s\n\n", eciesObt.c_str());
 
 	// SHA256

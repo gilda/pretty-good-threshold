@@ -1,29 +1,43 @@
 #include "ecies.h"
 
+// TODO check for NULL
 ECIES::ECIES(EC_KEY *key, EC_KEY *pkey){
 	// TODO check validity of keys
 	this->key = key;
 	this->pkey = pkey;
+	// TODO remove 256/8 to define
+	unsigned char *dhkey = ECDH::computeKey(this->key, this->pkey, 256/8);
+	this->encrypter = new AESEncrypter(dhkey, 12);
+	this->decrypter = new AESDecrypter(dhkey, 12);
 }
 
 int ECIES::encrypt(std::string plaintext,
-            std::string aad,
-            unsigned char *iv, int iv_len,
-            unsigned char *ciphertext,
-            unsigned char *tag){
+            				std::string aad,
+            				unsigned char *ciphertext){
 
-	// TODO remove 256/8 to define
-	unsigned char *key = ECDH::computeKey(this->key, this->pkey, 256/8);
-	return AES::gcm_encrypt(plaintext, aad, key, iv, iv_len, ciphertext, tag);
+	return this->encrypter->encrypt(plaintext, aad, ciphertext);
 }
 
 std::string ECIES::decrypt(unsigned char *ciphertext,
 						   int ciphertext_len,
-          				   std::string aad,
-          				   unsigned char *tag,
-           				   unsigned char *iv, int iv_len){
+          				   std::string aad){
 
-	// TODO remove 256/8 to define
-	unsigned char *key = ECDH::computeKey(this->key, this->pkey, 256/8);
-	return AES::gcm_decrypt(ciphertext, ciphertext_len, aad, tag, key, iv, iv_len);
+	return this->decrypter->decrypt(ciphertext, ciphertext_len, aad);
+}
+
+unsigned char *ECIES::getIv(){
+	return this->encrypter->getIv();
+}
+
+unsigned char *ECIES::getTag(){
+	return this->encrypter->getTag();
+}
+
+void ECIES::setIv(unsigned char *iv){
+	this->decrypter->setIv(iv);
+}
+
+
+void ECIES::setTag(unsigned char *tag){
+	this->decrypter->setTag(tag);
 }
