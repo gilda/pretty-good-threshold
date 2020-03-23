@@ -2,6 +2,7 @@
 #include "util/util.h"
 #include "ssss/ssss.h"
 #include "vss/vss.h"
+#include "pcommit/pcommit.h"
 #include "aes/aes.h"
 #include "ecdh/ecdh.h"
 #include "ecies/ecies.h"
@@ -29,6 +30,14 @@ int main(){
 		printf("x = %s, y = %s\n", BN_bn2hex(it->x), BN_bn2hex(it->y));
 	}
 	printf("f(0) = %s\n\n", BN_bn2hex(gildaConstructor.recoverSecret()));
+
+	//PCommitment
+	BIGNUM *pcommitValue = BN_new();
+	BN_set_word(pcommitValue,3);
+	BIGNUM *pcommitRand = BN_new();
+	BN_set_word(pcommitRand, 45);
+	EC_POINT *commitment = PCommitment::commit(pcommitValue, pcommitRand);
+	printf("PCommitment %s\n\n", PCommitment::verify(pcommitValue, pcommitRand, commitment) ? "works" : "is broken");
 
 	// VSS
 	VSS feld = VSS(4, 5, BN_dup(a));

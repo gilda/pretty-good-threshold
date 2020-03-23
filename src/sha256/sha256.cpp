@@ -12,5 +12,5 @@ unsigned char *HASH::sha256(unsigned char *data, unsigned int len){
 }
 
 unsigned char *HASH::sha256(std::string data){
-	return HASH::sha256((unsigned char *)data.c_str(), data.length);
+	return HASH::sha256((unsigned char *)data.c_str(), data.length());
 }
