@@ -10,3 +10,7 @@ unsigned char *HASH::sha256(unsigned char *data, unsigned int len){
 	
 	return ret;
 }
+
+unsigned char *HASH::sha256(std::string data){
+	return HASH::sha256((unsigned char *)data.c_str(), data.length);
+}

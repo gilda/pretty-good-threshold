@@ -4,4 +4,5 @@
 
 namespace HASH{
 	unsigned char *sha256(unsigned char *data, unsigned int len);
+	unsigned char *sha256(std::string data);
 }
