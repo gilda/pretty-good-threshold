@@ -13,7 +13,11 @@ VSS::VSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 	this->generateCommitments();
 }
 
-bool VSS::verifyShare(const VSSShare share){
+VSS::VSS(){
+	
+}
+
+bool VSS::verifyShare(std::vector<EC_POINT *> commitments, const VSSShare share){
 	BN_CTX *ctx = BN_CTX_new();
 	if(ctx == NULL) handleErrors();
 
@@ -38,14 +42,14 @@ bool VSS::verifyShare(const VSSShare share){
 	EC_POINT *verify = EC_POINT_new(group);
 	if(verify == NULL) handleErrors();
 	
-	for(unsigned int i = 0; i < this->commitments.size(); i++){
+	for(unsigned int i = 0; i < commitments.size(); i++){
 		if(BN_dec2bn(&iBN, std::to_string(i).c_str()) == 0) handleErrors();
 
 		// xPowered = share.x^i
 		if(BN_mod_exp(xPowered, share.secret.x, iBN, SSSS::getP(), ctx) == 0) handleErrors();
 
 		// commitPowered = commitment[i]^xPowred
-		if(EC_POINT_mul(group, commitPowered, NULL, this->commitments.at(i), xPowered, ctx) == 0) handleErrors();
+		if(EC_POINT_mul(group, commitPowered, NULL, commitments.at(i), xPowered, ctx) == 0) handleErrors();
 		
 		// verify = verify + commitPowered
 		if(EC_POINT_add(group, verify, verify, commitPowered, ctx) == 0) handleErrors();

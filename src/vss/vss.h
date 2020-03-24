@@ -17,9 +17,10 @@ class VSS{
 	public:
 		// init params and create commitments
 		VSS(unsigned int t, unsigned int n, const BIGNUM *secret);
-		
+		VSS();
+
 		// verify a share using feldman VSS
-		bool verifyShare(const VSSShare share);
+		static bool verifyShare(std::vector<EC_POINT *> commitments, const VSSShare share);
 		
 		// return the recovered secret while verifieng each share
 		std::pair<BIGNUM *, BIGNUM *> recoverSecret(std::vector<VSSShare> shares);

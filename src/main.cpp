@@ -8,6 +8,7 @@
 #include "ecies/ecies.h"
 #include "sha256/sha256.h"
 #include "ecdsa/ecdsa.h"
+#include "dkg/dkg.h"
 
 
 // TODO make sure all keys are OPENSSL_secure_malloc()
@@ -43,11 +44,11 @@ int main(){
 	VSS feld = VSS(4, 5, BN_dup(a));
 	std::vector<VSSShare> vssPoints = feld.getShares();
 	EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp256k1);
-	printf("real share #0: %s\n", feld.verifyShare(vssPoints.at(0)) ? "valid share" : "invalid share");
-	printf("real share #1: %s\n", feld.verifyShare(vssPoints.at(1)) ? "valid share" : "invalid share");
-	printf("real share #2: %s\n", feld.verifyShare(vssPoints.at(2)) ? "valid share" : "invalid share");
-	printf("real share #3: %s\n", feld.verifyShare(vssPoints.at(3)) ? "valid share" : "invalid share");
-	printf("real share #4: %s\n", feld.verifyShare(vssPoints.at(4)) ? "valid share" : "invalid share");
+	printf("real share #0: %s\n", feld.verifyShare(feld.getCommitments(), vssPoints.at(0)) ? "valid share" : "invalid share");
+	printf("real share #1: %s\n", feld.verifyShare(feld.getCommitments(), vssPoints.at(1)) ? "valid share" : "invalid share");
+	printf("real share #2: %s\n", feld.verifyShare(feld.getCommitments(), vssPoints.at(2)) ? "valid share" : "invalid share");
+	printf("real share #3: %s\n", feld.verifyShare(feld.getCommitments(), vssPoints.at(3)) ? "valid share" : "invalid share");
+	printf("real share #4: %s\n", feld.verifyShare(feld.getCommitments(), vssPoints.at(4)) ? "valid share" : "invalid share");
 	printf("master vss %s\n\n", EC_POINT_cmp(group, PCommitment::commit(feld.recoverSecret(vssPoints).first, feld.recoverSecret(vssPoints).second), feld.getMasterCommit(), NULL) == 0 ? "works" : "is broken");
 
 	// AES-GCM
@@ -94,10 +95,27 @@ int main(){
 	std::string sigData = "gilda";
 	unsigned char *sig = ECDSA::sign(sigData, ecKey);
 	printf("signature is: %s\n", (char *)sig);
-	printf("signature is: %s\n", ECDSA::verify(sigData, ecKey, sig) ? "valid" : "invalid");
+	printf("signature is: %s\n\n", ECDSA::verify(sigData, ecKey, sig) ? "valid" : "invalid");
 
 	// DKG
-
+	DKG dkg1 = DKG(3,5);
+	DKG dkg2 = DKG(3,5);
+	for(unsigned int i = 0; i < dkg1.getCommitments().size(); i++){
+		printf("dkg1 poly commitment #%u %s\n", i, EC_POINT_point2hex(group, dkg1.getCommitments().at(i), POINT_CONVERSION_COMPRESSED, NULL));
+	}
+	for(unsigned int i = 0; i < dkg2.getCommitments().size(); i++){
+		printf("dkg2 poly commitment #%u %s\n", i, EC_POINT_point2hex(group, dkg2.getCommitments().at(i), POINT_CONVERSION_COMPRESSED, NULL));
+	}
+	for(unsigned int i = 0; i < dkg1.getShares().size(); i++){
+		//printf("dkg1 share #%u %s %s\n", i, BN_bn2hex(dkg1.getShare(i).secret.y), BN_bn2hex(dkg1.getShare(i).random.y));
+		printf("share #%u %s\n", i, DKG::verifyShare(dkg1.getCommitments(), dkg1.getShare(i)) ? "valid" : "invalid");
+	}
+	for(unsigned int i = 0; i < dkg2.getShares().size(); i++){
+		//printf("dkg2 share #%u %s %s\n", i, BN_bn2hex(dkg2.getShare(i).secret.y), BN_bn2hex(dkg2.getShare(i).random.y));
+		printf("share #%u %s\n", i, DKG::verifyShare(dkg2.getCommitments(), dkg2.getShare(i)) ? "valid" : "invalid");
+	}
+	printf("public key is: %s\n", EC_POINT_point2hex(group, DKG::getPublicKey(std::vector<EC_POINT *>{dkg1.getSecretCommitment(), dkg2.getSecretCommitment()}), POINT_CONVERSION_COMPRESSED, NULL));
+	
 	cleanupOpenSSL();
 	return 0;
 }

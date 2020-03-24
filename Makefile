@@ -1,4 +1,4 @@
-all: bin/ssss.o bin/vss.o bin/aes.o bin/ecdh.o bin/ecies.o bin/sha256.o bin/ecdsa.o bin/pcommit.o bin/util.o
+all: bin/ssss.o bin/vss.o bin/aes.o bin/ecdh.o bin/ecies.o bin/sha256.o bin/ecdsa.o bin/pcommit.o bin/dkg.o bin/util.o
 	g++ -Wall src/main.cpp $^ -lssl -lcrypto -o bin/pretty-good-threshold
 
 bin/util.o: src/util/util.h src/util/util.cpp
@@ -27,3 +27,6 @@ bin/ecdsa.o: src/ecdsa/ecdsa.h src/ecdsa/ecdsa.cpp
 
 bin/pcommit.o: src/pcommit/pcommit.h src/pcommit/pcommit.cpp
 	g++ -c -Wall src/pcommit/pcommit.cpp -lssl -lcrypto -o bin/pcommit.o
+
+bin/dkg.o: src/dkg/dkg.h src/dkg/dkg.cpp
+	g++ -c -Wall src/dkg/dkg.cpp -lssl -lcrypto -o bin/dkg.o
