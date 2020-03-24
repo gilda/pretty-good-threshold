@@ -41,18 +41,14 @@ int main(){
 
 	// VSS
 	VSS feld = VSS(4, 5, BN_dup(a));
-	std::vector<Share> vssPoints = feld.getShares();
-	Share fake;
-	fake.x = BN_new();
-	fake.y = BN_new();
-	BN_set_word(fake.x, 2);
-	BN_set_word(fake.y, 2);
+	std::vector<VSSShare> vssPoints = feld.getShares();
+	EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp256k1);
 	printf("real share #0: %s\n", feld.verifyShare(vssPoints.at(0)) ? "valid share" : "invalid share");
 	printf("real share #1: %s\n", feld.verifyShare(vssPoints.at(1)) ? "valid share" : "invalid share");
 	printf("real share #2: %s\n", feld.verifyShare(vssPoints.at(2)) ? "valid share" : "invalid share");
 	printf("real share #3: %s\n", feld.verifyShare(vssPoints.at(3)) ? "valid share" : "invalid share");
 	printf("real share #4: %s\n", feld.verifyShare(vssPoints.at(4)) ? "valid share" : "invalid share");
-	printf("fake share: %s\n\n", feld.verifyShare(fake) ? "valid share" : "invalid share");
+	printf("master vss %s\n\n", EC_POINT_cmp(group, PCommitment::commit(feld.recoverSecret(vssPoints).first, feld.recoverSecret(vssPoints).second), feld.getMasterCommit(), NULL) == 0 ? "works" : "is broken");
 
 	// AES-GCM
 	std::string aesPtext = "aes works!";

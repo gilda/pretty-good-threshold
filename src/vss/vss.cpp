@@ -4,11 +4,16 @@ VSS::VSS(unsigned int t, unsigned int n, const BIGNUM *secret){
 	this->t = t;
 	this->n = n;
 	this->secretSharing = SSSS(t, n, secret);
-	this->generateCommitments();
 
+	this->rand = BN_new();
+	if(this->rand == NULL) handleErrors();
+	BN_rand_range(rand, SSSS::getP());
+	this->randomSharing = SSSS(t, n, rand);
+
+	this->generateCommitments();
 }
 
-bool VSS::verifyShare(const Share share){
+bool VSS::verifyShare(const VSSShare share){
 	BN_CTX *ctx = BN_CTX_new();
 	if(ctx == NULL) handleErrors();
 
@@ -18,8 +23,8 @@ bool VSS::verifyShare(const Share share){
 	EC_POINT *target = EC_POINT_new(group);
 	if(target == NULL) handleErrors();
 
-	// target = g^share.y
-	if(EC_POINT_mul(group, target, share.y, NULL, NULL, ctx) == 0) handleErrors();
+	// target = g^secretShare.y*h^randomShare.y
+	target = PCommitment::commit(share.secret.y, share.random.y);
 
 	EC_POINT *commitPowered = EC_POINT_new(group);
 	if(commitPowered == NULL) handleErrors();
@@ -37,7 +42,7 @@ bool VSS::verifyShare(const Share share){
 		if(BN_dec2bn(&iBN, std::to_string(i).c_str()) == 0) handleErrors();
 
 		// xPowered = share.x^i
-		if(BN_mod_exp(xPowered, share.x, iBN, SSSS::getP(), ctx) == 0) handleErrors();
+		if(BN_mod_exp(xPowered, share.secret.x, iBN, SSSS::getP(), ctx) == 0) handleErrors();
 
 		// commitPowered = commitment[i]^xPowred
 		if(EC_POINT_mul(group, commitPowered, NULL, this->commitments.at(i), xPowered, ctx) == 0) handleErrors();
@@ -64,18 +69,38 @@ bool VSS::verifyShare(const Share share){
 	return intRet == 0;
 }
 
-// TODO verify each share
-BIGNUM *VSS::recoverSecret(std::vector<Share> shares){
-	return this->secretSharing.recoverSecret(shares);
+std::pair<BIGNUM *, BIGNUM *> VSS::recoverSecret(std::vector<VSSShare> shares){
+	std::vector<Share> secret;
+	std::vector<Share> random;
+
+	for(unsigned int i = 0; i < shares.size(); i++){
+		secret.push_back(shares.at(i).secret);
+		random.push_back(shares.at(i).random);
+	}
+
+	return std::pair<BIGNUM *, BIGNUM *>(this->secretSharing.recoverSecret(secret), this->secretSharing.recoverSecret(random));
 }
 
-std::vector<Share> VSS::getShares(){
-	return this->secretSharing.getShares();
+std::vector<VSSShare> VSS::getShares(){
+	std::vector<VSSShare> ret;
+	for(unsigned int i = 0; i < this->secretSharing.getShares().size(); i++){
+		VSSShare iShare;
+		iShare.secret = this->secretSharing.getShares().at(i);
+		iShare.random = this->randomSharing.getShares().at(i);
+
+		ret.push_back(iShare);
+	}
+
+	return ret;
 }
 
 
 std::vector<EC_POINT *> VSS::getCommitments(){
 	return this->commitments;
+}
+
+EC_POINT *VSS::getMasterCommit(){
+	return PCommitment::commit(this->secretSharing.recoverSecret(this->secretSharing.getShares()), this->rand);
 }
 
 unsigned int VSS::getN(){
@@ -99,8 +124,9 @@ void VSS::generateCommitments(){
 		EC_POINT *commit = EC_POINT_new(group);
 		if(commit == NULL) handleErrors();
 
-		// commit = g^poly[i]
-		if(EC_POINT_mul(group, commit, this->secretSharing.getPolynomial().at(i), NULL, NULL, ctx) == 0) handleErrors();
+		// commit = g^poly[i]*h^randPoly[i]
+		commit = PCommitment::commit(this->secretSharing.getPolynomial().at(i), this->randomSharing.getPolynomial().at(i));
+		if(commit == NULL) handleErrors();
 
 		this->commitments.push_back(commit);
 	}
