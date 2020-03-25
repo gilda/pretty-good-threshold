@@ -1,18 +1,58 @@
 #include "dkg.h"
 
-DKG::DKG(unsigned int t, unsigned int n){
+DKG::DKG(unsigned int id, unsigned int t, unsigned int n){
+	this->id = id;
 	this->t = t;
 	this->n = n;
 
+	this->commitments = new std::vector<EC_POINT *>[this->n];
+	this->publicKeyCommitments = new EC_POINT *[this->n];
+	this->privateKeyShares = new BIGNUM *[this->n];
+	this->shares = new VSSShare[this->n];
+
 	BIGNUM *bn = BN_new();
 	if(bn == NULL) handleErrors();
-	BN_rand_range(bn, SSSS::getP());
+	int err = BN_rand_range(bn, SSSS::getP());
+	if(err == 0) handleErrors();
 
 	this->secret = VSS(t, n, bn);
+
+	this->addNodeShare(this->id, this->getShare(this->id));
+	this->addNodeCommitments(this->id, this->getCommitments());
+	this->addPublicKeyCommitment(this->id, this->getPublicKeyCommitment());
+	this->addPrivateShare(this->id, this->getPrivateShare());
+}
+
+BIGNUM *DKG::getPrivateShare(){
+	return this->secret.recoverSecret(this->secret.getShares()).first;
+}
+
+void DKG::addPrivateShare(unsigned int n, BIGNUM *share){
+	this->privateKeyShares[n] = share;
+}
+
+BIGNUM *DKG::getPrivateKey(){
+	BN_CTX *ctx = BN_CTX_new();
+	if(ctx == NULL) handleErrors();
+
+	BIGNUM *privateKey = BN_new();
+	if(privateKey == NULL) handleErrors();
+
+	int err;
+	for(unsigned int i = 0; i < this->n; i++){
+		err = BN_mod_add(privateKey, privateKey, this->privateKeyShares[i], SSSS::getP(), ctx);
+		if(err == 0) handleErrors();
+	}
+
+	return privateKey;
 }
 
 std::vector<EC_POINT *> DKG::getCommitments(){
 	return this->secret.getCommitments();
+}
+
+void DKG::addNodeCommitments(unsigned int n, std::vector<EC_POINT *> commitments){
+	this->commitments[n] = commitments;
 }
 
 VSSShare DKG::getShare(unsigned int i){
@@ -24,11 +64,20 @@ std::vector<VSSShare> DKG::getShares(){
 	return this->secret.getShares();
 }
 
+void DKG::addNodeShare(unsigned int n, VSSShare share){
+	this->shares[n] = share;
+}
+
+// TODO make sure all commitments are full and reach n
 bool DKG::verifyShare(std::vector<EC_POINT *> commitments, VSSShare share){
 	return VSS::verifyShare(commitments, share);
 }
 
-EC_POINT *DKG::getSecretCommitment(){
+bool DKG::verifyShare(unsigned int id){
+	return VSS::verifyShare(this->commitments[id], this->shares[id]);
+}
+
+EC_POINT *DKG::getPublicKeyCommitment(){
 	BN_CTX *ctx = BN_CTX_new();
 	if(ctx == NULL) handleErrors();
 
@@ -42,6 +91,10 @@ EC_POINT *DKG::getSecretCommitment(){
 	if(err == 0) handleErrors();
 
 	return secretCommitment;
+}
+
+void DKG::addPublicKeyCommitment(unsigned int n, EC_POINT *commitment){
+	this->publicKeyCommitments[n] = commitment;
 }
 
 EC_POINT *DKG::getPublicKey(std::vector<EC_POINT *> commitments){
@@ -65,4 +118,14 @@ EC_POINT *DKG::getPublicKey(std::vector<EC_POINT *> commitments){
 	}
 
 	return publicKey;
+}
+
+// TODO make sure all commitments are full and reach n
+EC_POINT *DKG::getPublicKey(){
+	std::vector<EC_POINT *> commitVector;
+	for(unsigned int i = 0; i < this->n; i++){
+		commitVector.push_back(this->publicKeyCommitments[i]);
+	}
+
+	return DKG::getPublicKey(commitVector);
 }

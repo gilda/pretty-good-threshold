@@ -25,6 +25,7 @@ SSSS::SSSS(){
 	this->t = 0;
 	this->n = 0;
 	this->poly = std::vector<BIGNUM *>();
+	if(BN_hex2bn(&this->p, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141") == 0) handleErrors();
 }
 
 BIGNUM *SSSS::p;

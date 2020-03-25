@@ -1,14 +1,14 @@
 #include <iostream>
-#include "util/util.h"
-#include "ssss/ssss.h"
-#include "vss/vss.h"
-#include "pcommit/pcommit.h"
-#include "aes/aes.h"
-#include "ecdh/ecdh.h"
-#include "ecies/ecies.h"
-#include "sha256/sha256.h"
-#include "ecdsa/ecdsa.h"
-#include "dkg/dkg.h"
+#include "../util/util.h"
+#include "../ssss/ssss.h"
+#include "../vss/vss.h"
+#include "../pcommit/pcommit.h"
+#include "../aes/aes.h"
+#include "../ecdh/ecdh.h"
+#include "../ecies/ecies.h"
+#include "../sha256/sha256.h"
+#include "../ecdsa/ecdsa.h"
+#include "../dkg/dkg.h"
 
 
 // TODO make sure all keys are OPENSSL_secure_malloc()
@@ -98,8 +98,8 @@ int main(){
 	printf("signature is: %s\n\n", ECDSA::verify(sigData, ecKey, sig) ? "valid" : "invalid");
 
 	// DKG
-	DKG dkg1 = DKG(3,5);
-	DKG dkg2 = DKG(3,5);
+	DKG dkg1 = DKG(0, 3,5);
+	DKG dkg2 = DKG(1, 3,5);
 	for(unsigned int i = 0; i < dkg1.getCommitments().size(); i++){
 		printf("dkg1 poly commitment #%u %s\n", i, EC_POINT_point2hex(group, dkg1.getCommitments().at(i), POINT_CONVERSION_COMPRESSED, NULL));
 	}
@@ -114,8 +114,16 @@ int main(){
 		//printf("dkg2 share #%u %s %s\n", i, BN_bn2hex(dkg2.getShare(i).secret.y), BN_bn2hex(dkg2.getShare(i).random.y));
 		printf("share #%u %s\n", i, DKG::verifyShare(dkg2.getCommitments(), dkg2.getShare(i)) ? "valid" : "invalid");
 	}
-	printf("public key is: %s\n", EC_POINT_point2hex(group, DKG::getPublicKey(std::vector<EC_POINT *>{dkg1.getSecretCommitment(), dkg2.getSecretCommitment()}), POINT_CONVERSION_COMPRESSED, NULL));
+	printf("public key is: %s\n", EC_POINT_point2hex(group, DKG::getPublicKey(std::vector<EC_POINT *>{dkg1.getPublicKeyCommitment(), dkg2.getPublicKeyCommitment()}), POINT_CONVERSION_COMPRESSED, NULL));
 	
+	// TODO
+	// cleanup code and TODO's
+	// create a dkg sim with tecies (add code to tecies)
+	// create a dkg sim with tecdsa (add code to tecdsa)
+	// create the p2p net
+	// create p2p bootstrap node code
+	// create p2p logging
+
 	cleanupOpenSSL();
 	return 0;
 }

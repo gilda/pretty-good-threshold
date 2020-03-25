@@ -1,5 +1,6 @@
-all: bin/ssss.o bin/vss.o bin/aes.o bin/ecdh.o bin/ecies.o bin/sha256.o bin/ecdsa.o bin/pcommit.o bin/dkg.o bin/util.o
-	g++ -Wall src/main.cpp $^ -lssl -lcrypto -o bin/pretty-good-threshold
+test: bin/ssss.o bin/vss.o bin/aes.o bin/ecdh.o bin/ecies.o bin/sha256.o bin/ecdsa.o bin/pcommit.o bin/dkg.o bin/util.o
+	g++ -Wall src/test/components.cpp $^ -lssl -lcrypto -o bin/test/components
+	g++ -Wall src/test/dkgSim.cpp $^ -lssl -lcrypto -o bin/test/dkgSim
 
 bin/util.o: src/util/util.h src/util/util.cpp
 	g++ -c -Wall src/util/util.cpp -lssl -lcrypto -o bin/util.o
