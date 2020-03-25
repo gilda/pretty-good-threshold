@@ -49,6 +49,7 @@ int main(){
 	printf("real share #2: %s\n", feld.verifyShare(feld.getCommitments(), vssPoints.at(2)) ? "valid share" : "invalid share");
 	printf("real share #3: %s\n", feld.verifyShare(feld.getCommitments(), vssPoints.at(3)) ? "valid share" : "invalid share");
 	printf("real share #4: %s\n", feld.verifyShare(feld.getCommitments(), vssPoints.at(4)) ? "valid share" : "invalid share");
+	printf("recovered secret: %s\n", BN_bn2hex(feld.recoverSecret(feld.getShares()).first));
 	printf("master vss %s\n\n", EC_POINT_cmp(group, PCommitment::commit(feld.recoverSecret(vssPoints).first, feld.recoverSecret(vssPoints).second), feld.getMasterCommit(), NULL) == 0 ? "works" : "is broken");
 
 	// AES-GCM

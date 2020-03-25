@@ -38,9 +38,13 @@ BIGNUM *DKG::getPrivateKey(){
 	BIGNUM *privateKey = BN_new();
 	if(privateKey == NULL) handleErrors();
 
+	BIGNUM *temp = BN_new();
+	if(temp == NULL) handleErrors();
+
 	int err;
 	for(unsigned int i = 0; i < this->n; i++){
-		err = BN_mod_add(privateKey, privateKey, this->privateKeyShares[i], SSSS::getP(), ctx);
+		BN_copy(temp, privateKey);
+		err = BN_mod_add(privateKey, temp, this->privateKeyShares[i], SSSS::getP(), ctx);
 		if(err == 0) handleErrors();
 	}
 
@@ -106,14 +110,10 @@ EC_POINT *DKG::getPublicKey(std::vector<EC_POINT *> commitments){
 	
 	EC_POINT *publicKey = EC_POINT_new(group);
 	if(publicKey == NULL) handleErrors();
-
-	BIGNUM *one = BN_new();
-	BN_one(one);
-	if(one == NULL) handleErrors();
-
+	
 	int err;
 	for(unsigned int i = 0; i < commitments.size(); i++){
-		err = EC_POINT_mul(group, publicKey, NULL, commitments.at(i), one, ctx);
+		err = EC_POINT_add(group, publicKey, publicKey, commitments.at(i), ctx);
 		if(err == 0) handleErrors();
 	}
 
