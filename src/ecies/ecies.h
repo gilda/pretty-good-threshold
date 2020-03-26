@@ -13,6 +13,7 @@ class ECIES{
 	
 	public:
 		ECIES(EC_KEY *key, EC_KEY *pkey);
+		ECIES();
 
 		int encrypt(std::string plaintext,
                 	std::string aad,

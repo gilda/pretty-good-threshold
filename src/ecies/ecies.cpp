@@ -11,6 +11,8 @@ ECIES::ECIES(EC_KEY *key, EC_KEY *pkey){
 	this->decrypter = new AESDecrypter(dhkey, 12);
 }
 
+ECIES::ECIES(){}
+
 int ECIES::encrypt(std::string plaintext,
             				std::string aad,
             				unsigned char *ciphertext){

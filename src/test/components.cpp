@@ -9,6 +9,7 @@
 #include "../sha256/sha256.h"
 #include "../ecdsa/ecdsa.h"
 #include "../dkg/dkg.h"
+#include "../ot/ot.h"
 
 
 // TODO make sure all keys are OPENSSL_secure_malloc()
@@ -115,7 +116,21 @@ int main(){
 		//printf("dkg2 share #%u %s %s\n", i, BN_bn2hex(dkg2.getShare(i).secret.y), BN_bn2hex(dkg2.getShare(i).random.y));
 		printf("share #%u %s\n", i, DKG::verifyShare(dkg2.getCommitments(), dkg2.getShare(i)) ? "valid" : "invalid");
 	}
-	printf("public key is: %s\n", EC_POINT_point2hex(group, DKG::getPublicKey(std::vector<EC_POINT *>{dkg1.getPublicKeyCommitment(), dkg2.getPublicKeyCommitment()}), POINT_CONVERSION_COMPRESSED, NULL));
+	printf("public key is: %s\n\n", EC_POINT_point2hex(group, DKG::getPublicKey(std::vector<EC_POINT *>{dkg1.getPublicKeyCommitment(), dkg2.getPublicKeyCommitment()}), POINT_CONVERSION_COMPRESSED, NULL));
+	
+	
+	// OT
+	std::string aVal = "this is a";
+	std::string bVal = "this is b";
+
+	OTSender send = OTSender(aVal, bVal);
+	OTChooser choose = OTChooser(send.getH());
+	std::pair<EC_POINT *, std::pair<EC_POINT *, EC_POINT *>> vals;
+
+	send.encryptValues(choose.getPoints().second, choose.getPoints().first);
+	printf("oblivoius transfer was: %s\n", choose.decrypt(send.getKey(), send.getEncrypted().second, send.getEncrypted().first).c_str());
+	send.encryptValues(choose.getPoints().first, choose.getPoints().second);
+	printf("oblivoius transfer was: %s\n", choose.decrypt(send.getKey(), send.getEncrypted().second, send.getEncrypted().first).c_str());
 	
 	// TODO
 	// cleanup code and TODO's

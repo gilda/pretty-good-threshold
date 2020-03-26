@@ -1,4 +1,4 @@
-test: bin/ssss.o bin/vss.o bin/aes.o bin/ecdh.o bin/ecies.o bin/sha256.o bin/ecdsa.o bin/pcommit.o bin/dkg.o bin/util.o
+test: bin/ssss.o bin/vss.o bin/aes.o bin/ecdh.o bin/ecies.o bin/sha256.o bin/ecdsa.o bin/pcommit.o bin/dkg.o  bin/ot.o bin/util.o
 	g++ -Wall src/test/components.cpp $^ -lssl -lcrypto -o bin/test/components
 	g++ -Wall src/test/dkgSim.cpp $^ -lssl -lcrypto -o bin/test/dkgSim
 
@@ -31,3 +31,6 @@ bin/pcommit.o: src/pcommit/pcommit.h src/pcommit/pcommit.cpp
 
 bin/dkg.o: src/dkg/dkg.h src/dkg/dkg.cpp
 	g++ -c -Wall src/dkg/dkg.cpp -lssl -lcrypto -o bin/dkg.o
+
+bin/ot.o: src/ot/ot.h src/ot/ot.cpp
+	g++ -c -Wall src/ot/ot.cpp -lssl -lcrypto -o bin/ot.o
