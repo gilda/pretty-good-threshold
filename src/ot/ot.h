@@ -24,6 +24,7 @@ class OTSender{
 
 	public:
 		OTSender(std::string a, std::string b);
+		OTSender();
 		EC_POINT *getH();
 		EC_KEY *getKey();
 		void encryptValues(EC_POINT *p1, EC_POINT *p2);
@@ -39,6 +40,7 @@ class OTChooser{
 
 	public:
 		OTChooser(EC_POINT *h);
+		OTChooser();
 		std::pair<EC_POINT *, EC_POINT *>getPoints();
 		std::string decrypt(EC_KEY *key, std::pair<unsigned char **, int>, std::pair<unsigned char **, int>);
 };

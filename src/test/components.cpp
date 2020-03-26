@@ -10,6 +10,7 @@
 #include "../ecdsa/ecdsa.h"
 #include "../dkg/dkg.h"
 #include "../ot/ot.h"
+#include "../mta/mta.h"
 
 
 // TODO make sure all keys are OPENSSL_secure_malloc()
@@ -130,8 +131,34 @@ int main(){
 	send.encryptValues(choose.getPoints().second, choose.getPoints().first);
 	printf("oblivoius transfer was: %s\n", choose.decrypt(send.getKey(), send.getEncrypted().second, send.getEncrypted().first).c_str());
 	send.encryptValues(choose.getPoints().first, choose.getPoints().second);
-	printf("oblivoius transfer was: %s\n", choose.decrypt(send.getKey(), send.getEncrypted().second, send.getEncrypted().first).c_str());
+	printf("oblivoius transfer was: %s\n\n", choose.decrypt(send.getKey(), send.getEncrypted().second, send.getEncrypted().first).c_str());
 	
+	// MtA
+	BIGNUM *b = BN_new();
+	BN_set_word(b, 7);
+	BN_set_word(a, 4);
+	
+	MtALeader lead = MtALeader(b);
+	MtAFollower follower = MtAFollower(a);
+
+	for(int i = 0; i < 256; i++){
+		follower.setCurrentH(lead.getCurrentH());
+		lead.encryptCurrentValues(follower.getCurrentPoints().first, follower.getCurrentPoints().second);
+		std::pair<std::pair<unsigned char **, int>, std::pair<unsigned char **, int>> enc = lead.getCurrentEncrypted();
+		follower.decryptCurrent(lead.getCurrentKey(), enc.first, enc.second);
+	}
+
+	printf("lead secret: %s\n", BN_bn2hex(lead.finalize()));
+	printf("follower secret: %s\n", BN_bn2hex(follower.finalize()));
+	
+	BN_CTX *ctx = BN_CTX_new();
+	if(ctx == NULL) handleErrors();
+	BIGNUM *mtaTotal = BN_new();
+	int err = BN_mod_add(mtaTotal, lead.finalize(), follower.finalize(), SSSS().getP(), ctx);
+	if(err == 0) handleErrors();
+
+	printf("MtA total is: %s\n", BN_bn2hex(mtaTotal));
+
 	// TODO
 	// cleanup code and TODO's
 	// create a dkg sim with tecies (add code to tecies)

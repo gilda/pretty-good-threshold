@@ -30,6 +30,8 @@ OTSender::OTSender(std::string a, std::string b){
 	this->encB = new unsigned char *[3];
 }
 
+OTSender::OTSender(){}
+
 EC_POINT *OTSender::getH(){
 	return this->h;
 }
@@ -134,6 +136,8 @@ OTChooser::OTChooser(EC_POINT *h){
 	err = EC_POINT_add(group, this->p2, h, negKey, ctx);
 	if(err == 0) handleErrors();
 }
+
+OTChooser::OTChooser(){}
 
 std::pair<EC_POINT *, EC_POINT *> OTChooser::getPoints(){
 	return std::pair<EC_POINT *, EC_POINT *>(this->choice, this->p2);
