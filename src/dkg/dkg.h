@@ -19,6 +19,7 @@ class DKG{
 
 	public:
 		DKG(unsigned int id, unsigned int t, unsigned int n);
+		DKG();
 		BIGNUM *getPrivateShare();
 		void addPrivateShare(unsigned int n, BIGNUM *share);
 		BIGNUM *getPrivateKey();

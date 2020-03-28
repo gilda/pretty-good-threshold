@@ -23,6 +23,8 @@ DKG::DKG(unsigned int id, unsigned int t, unsigned int n){
 	this->addPrivateShare(this->id, this->getPrivateShare());
 }
 
+DKG::DKG(){}
+
 BIGNUM *DKG::getPrivateShare(){
 	return this->secret.recoverSecret(this->secret.getShares()).first;
 }

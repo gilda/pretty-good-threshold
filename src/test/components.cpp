@@ -16,6 +16,7 @@
 // TODO make sure all keys are OPENSSL_secure_malloc()
 // TODO comment aes ecdh ecies
 // TODO refactor to two entities ({prover, verifier}, {encrypter, decrypter}, {dealer, player})
+// TODO make Network versions of all classes
 
 int main(){
 	initOpenSSL();

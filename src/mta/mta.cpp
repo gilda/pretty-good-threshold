@@ -43,17 +43,17 @@ EC_KEY *MtALeader::getCurrentKey(){
 	return this->sender.getKey();
 }
 
+std::pair<std::pair<unsigned char **, int>, std::pair<unsigned char **, int>> MtALeader::getCurrentEncrypted(){
+	this->index++;
+	return this->sender.getEncrypted();
+}
+
 BIGNUM *MtALeader::finalize(){
 	if(index < 255){
 		return NULL;
 	}
 
 	return this->accumulated;
-}
-
-std::pair<std::pair<unsigned char **, int>, std::pair<unsigned char **, int>> MtALeader::getCurrentEncrypted(){
-	this->index++;
-	return this->sender.getEncrypted();
 }
 
 MtAFollower::MtAFollower(BIGNUM *a){
