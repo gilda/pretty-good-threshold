@@ -38,15 +38,15 @@ TECDSA::TECDSA(unsigned int id, unsigned int t, unsigned int n){
 	if(err == 0) handleErrors();
 }
 
-void TECDSA::doMtA(MtALeader *lead, MtAFollower *follow){
+void TECDSA::doMtA(TECDSA *leader, TECDSA *follower){
 	BN_CTX *ctx = BN_CTX_new();
 	if(ctx == NULL) handleErrors();
 	
 	for(int i = 0; i < 256; i++){
-		follow->setCurrentH(lead->getCurrentH());
-		lead->encryptCurrentValues(follow->getCurrentPoints().first, follow->getCurrentPoints().second);
-		std::pair<std::pair<unsigned char **, int>, std::pair<unsigned char **, int>> enc = lead->getCurrentEncrypted();
-		follow->decryptCurrent(lead->getCurrentKey(), enc.first, enc.second);
+		follower->getCurrentFollower()->setCurrentH(leader->getCurrentLeader()->getCurrentH());
+		leader->getCurrentLeader()->encryptCurrentValues(follower->getCurrentFollower()->getCurrentPoints().first, follower->getCurrentFollower()->getCurrentPoints().second);
+		std::pair<std::pair<unsigned char **, int>, std::pair<unsigned char **, int>> enc = leader->getCurrentLeader()->getCurrentEncrypted();
+		follower->getCurrentFollower()->decryptCurrent(leader->getCurrentLeader()->getCurrentKey(), enc.first, enc.second);
 	}
 }
 
@@ -66,68 +66,40 @@ EC_POINT *TECDSA::getPrivGammaCommitment(){
 	return ret;
 }
 
-MtAFollower *TECDSA::getKGammaFollower(){
-	return new MtAFollower(this->privGamma);
+MtAFollower *TECDSA::getCurrentFollower(){
+	return this->follow;
 }
 
-void TECDSA::leadKGammaMtA(unsigned int id, MtAFollower *ot){
-	BN_CTX *ctx = BN_CTX_new();
-	if(ctx == NULL) handleErrors();
-	
-	MtALeader *lead = new MtALeader(this->privK);
-	this->doMtA(lead, ot);
-
-	int err = BN_mod_add(this->privDelta, this->privDelta, lead->finalize(), SSSS().getP(), ctx);
-	if(err == 0) handleErrors();
+MtALeader *TECDSA::getCurrentLeader(){
+	return this->lead;
 }
 
-MtALeader *TECDSA::getKGammaLeader(){
-	return new MtALeader(this->privK);
+void TECDSA::setKGammaFollower(){
+	this->follow = new MtAFollower(this->privGamma);
 }
 
-void TECDSA::followKGammaMtA(unsigned int id, MtALeader *ot){
-	BN_CTX *ctx = BN_CTX_new();
-	if(ctx == NULL) handleErrors();
-	
-	MtAFollower *follower = new MtAFollower(this->privGamma);
-	this->doMtA(ot, follower);
-
-	int err = BN_mod_add(this->privDelta, this->privDelta, follower->finalize(), SSSS().getP(), ctx);
-	if(err == 0) handleErrors();
+void TECDSA::setKGammaLeader(){
+	this->lead = new MtALeader(this->privK);
 }
 
-MtAFollower *TECDSA::getKPrivFollower(){
-	return new MtAFollower(this->dkg.getPrivateShare());
+void TECDSA::setKPrivFollower(){
+	this->follow = new MtAFollower(this->dkg.getPrivateShare());
 }
 
-void TECDSA::leadKPrivMtA(unsigned int id, MtAFollower *ot){
-	BN_CTX *ctx = BN_CTX_new();
-	if(ctx == NULL) handleErrors();
-	
-	MtALeader *lead = new MtALeader(this->privK);
-	this->doMtA(lead, ot);
-
-	int err = BN_mod_add(this->privDelta, this->privDelta, lead->finalize(), SSSS().getP(), ctx);
-	if(err == 0) handleErrors();
+void TECDSA::setKPrivLeader(){
+	this->lead = new MtALeader(this->privK);
 }
 
-MtALeader *TECDSA::getKPrivLeader(){
-	return new MtALeader(this->privK);
-}
-
-void TECDSA::followKPrivMtA(unsigned int id, MtALeader *ot){
-	BN_CTX *ctx = BN_CTX_new();
-	if(ctx == NULL) handleErrors();
-	
-	MtAFollower *follower = new MtAFollower(this->privK);
-	this->doMtA(ot, follower);
-
-	int err = BN_mod_add(this->privDelta, this->privDelta, follower->finalize(), SSSS().getP(), ctx);
-	if(err == 0) handleErrors();
-}
-
-BIGNUM *TECDSA::getDelta(){
+BIGNUM *TECDSA::getPrivDelta(){
 	return this->privDelta;
+}
+
+void TECDSA::addPrivDelta(BIGNUM *delta){
+	BN_CTX *ctx = BN_CTX_new();
+	if(ctx == NULL) handleErrors();
+
+	int err = BN_mod_add(this->privDelta, this->privDelta, delta, SSSS().getP(), ctx);
+	if(err == 0) handleErrors();
 }
 
 void TECDSA::addDelta(BIGNUM *delta){
@@ -135,6 +107,14 @@ void TECDSA::addDelta(BIGNUM *delta){
 	if(ctx == NULL) handleErrors();
 
 	int err = BN_mod_add(this->delta, this->delta, delta, SSSS().getP(), ctx);
+	if(err == 0) handleErrors();
+}
+
+void TECDSA::addPrivSigma(BIGNUM *sigma){
+	BN_CTX *ctx = BN_CTX_new();
+	if(ctx == NULL) handleErrors();
+
+	int err = BN_mod_add(this->privSigma, this->privSigma, sigma, SSSS().getP(), ctx);
 	if(err == 0) handleErrors();
 }
 
@@ -201,6 +181,10 @@ void TECDSA::addPrivS(BIGNUM *s){
 	if(err == 0) handleErrors();
 }
 
-std::pair<BIGNUM *, BIGNUM *> TECDSA::getSig(){
-	return std::pair<BIGNUM *, BIGNUM *>(this->r, this->s);
+unsigned char *TECDSA::getSig(){
+	unsigned char *ret = new unsigned char[64*2];
+	memcpy(ret, BN_bn2hex(this->r), 64);
+	memcpy(ret + 64, BN_bn2hex(this->s), 64);
+	
+	return ret;
 }

@@ -26,27 +26,97 @@ int main(){
 	TECDSA sig2 = TECDSA(2, 2, 3);
 
 	///////////////////// MtA k*Gamma /////////////////////
-	sig0.leadKGammaMtA(1, sig1.getKGammaFollower());
-	sig0.leadKGammaMtA(2, sig2.getKGammaFollower());
-	sig1.leadKGammaMtA(2, sig2.getKGammaFollower());
+	// sig0
+	sig0.setKGammaLeader();
+	sig1.setKGammaFollower();
+	TECDSA::doMtA(&sig0, &sig1);
+	sig0.addPrivDelta(sig0.getCurrentLeader()->finalize());
+	sig1.addPrivDelta(sig1.getCurrentFollower()->finalize());
+
+	sig0.setKGammaLeader();
+	sig2.setKGammaFollower();
+	TECDSA::doMtA(&sig0, &sig2);
+	sig0.addPrivDelta(sig0.getCurrentLeader()->finalize());
+	sig2.addPrivDelta(sig2.getCurrentFollower()->finalize());
+
+	// sig1
+	sig1.setKGammaLeader();
+	sig0.setKGammaFollower();
+	TECDSA::doMtA(&sig1, &sig0);
+	sig1.addPrivDelta(sig1.getCurrentLeader()->finalize());
+	sig0.addPrivDelta(sig0.getCurrentFollower()->finalize());
+
+	sig1.setKGammaLeader();
+	sig2.setKGammaFollower();
+	TECDSA::doMtA(&sig1, &sig2);
+	sig1.addPrivDelta(sig1.getCurrentLeader()->finalize());
+	sig2.addPrivDelta(sig2.getCurrentFollower()->finalize());
+
+	// sig2
+	sig2.setKGammaLeader();
+	sig0.setKGammaFollower();
+	TECDSA::doMtA(&sig2, &sig0);
+	sig2.addPrivDelta(sig2.getCurrentLeader()->finalize());
+	sig0.addPrivDelta(sig0.getCurrentFollower()->finalize());
+
+	sig2.setKGammaLeader();
+	sig1.setKGammaFollower();
+	TECDSA::doMtA(&sig2, &sig1);
+	sig2.addPrivDelta(sig2.getCurrentLeader()->finalize());
+	sig1.addPrivDelta(sig1.getCurrentFollower()->finalize());
 
 	///////////////////// MtA k*priv /////////////////////
-	sig0.leadKPrivMtA(1, sig1.getKPrivFollower());
-	sig0.leadKPrivMtA(2, sig2.getKPrivFollower());
-	sig1.leadKPrivMtA(2, sig2.getKPrivFollower());
+	// sig0
+	sig0.setKPrivLeader();
+	sig1.setKPrivFollower();
+	TECDSA::doMtA(&sig0, &sig1);
+	sig0.addPrivSigma(sig0.getCurrentLeader()->finalize());
+	sig1.addPrivSigma(sig1.getCurrentFollower()->finalize());
 
-	///////////////////// add deltas /////////////////////
-	sig0.addDelta(sig0.getDelta());
-	sig1.addDelta(sig0.getDelta());
-	sig2.addDelta(sig0.getDelta());
+	sig0.setKPrivLeader();
+	sig2.setKPrivFollower();
+	TECDSA::doMtA(&sig0, &sig2);
+	sig0.addPrivSigma(sig0.getCurrentLeader()->finalize());
+	sig2.addPrivSigma(sig2.getCurrentFollower()->finalize());
 
-	sig0.addDelta(sig1.getDelta());
-	sig1.addDelta(sig1.getDelta());
-	sig2.addDelta(sig1.getDelta());
+	// sig1
+	sig1.setKPrivLeader();
+	sig0.setKPrivFollower();
+	TECDSA::doMtA(&sig1, &sig0);
+	sig1.addPrivSigma(sig1.getCurrentLeader()->finalize());
+	sig0.addPrivSigma(sig0.getCurrentFollower()->finalize());
 
-	sig0.addDelta(sig2.getDelta());
-	sig1.addDelta(sig2.getDelta());
-	sig2.addDelta(sig2.getDelta());
+	sig1.setKPrivLeader();
+	sig2.setKPrivFollower();
+	TECDSA::doMtA(&sig1, &sig2);
+	sig1.addPrivSigma(sig1.getCurrentLeader()->finalize());
+	sig2.addPrivSigma(sig2.getCurrentFollower()->finalize());
+
+	// sig2
+	sig2.setKPrivLeader();
+	sig0.setKPrivFollower();
+	TECDSA::doMtA(&sig2, &sig0);
+	sig2.addPrivSigma(sig2.getCurrentLeader()->finalize());
+	sig0.addPrivSigma(sig0.getCurrentFollower()->finalize());
+
+	sig2.setKPrivLeader();
+	sig1.setKPrivFollower();
+	TECDSA::doMtA(&sig2, &sig1);
+	sig2.addPrivSigma(sig2.getCurrentLeader()->finalize());
+	sig1.addPrivSigma(sig1.getCurrentFollower()->finalize());
+
+	///////////////////// add all private deltas /////////////////////
+	sig0.addDelta(sig0.getPrivDelta());
+	sig0.addDelta(sig1.getPrivDelta());
+	sig0.addDelta(sig2.getPrivDelta());
+
+	sig1.addDelta(sig0.getPrivDelta());
+	sig1.addDelta(sig1.getPrivDelta());
+	sig1.addDelta(sig2.getPrivDelta());
+
+	sig2.addDelta(sig0.getPrivDelta());
+	sig2.addDelta(sig1.getPrivDelta());
+	sig2.addDelta(sig2.getPrivDelta());
 
 	///////////////////// add gamma commitments /////////////////////
 	sig0.addGammaCommitment(sig0.getPrivGammaCommitment());
@@ -64,10 +134,6 @@ int main(){
 	sig2.addGammaCommitment(sig2.getPrivGammaCommitment());
 	sig2.finalizeR();
 
-	printf("sig0 r: %s\n", BN_bn2hex(sig0.getSig().first));
-	printf("sig1 r: %s\n", BN_bn2hex(sig1.getSig().first));
-	printf("sig2 r: %s\n\n", BN_bn2hex(sig2.getSig().first));
-
 	///////////////////// add gamma commitments /////////////////////
 	sig0.addPrivS(sig0.getPrivS((unsigned char *)mess.c_str(), mess.length()));
 	sig0.addPrivS(sig1.getPrivS((unsigned char *)mess.c_str(), mess.length()));
@@ -81,10 +147,6 @@ int main(){
 	sig2.addPrivS(sig1.getPrivS((unsigned char *)mess.c_str(), mess.length()));
 	sig2.addPrivS(sig2.getPrivS((unsigned char *)mess.c_str(), mess.length()));
 
-	printf("sig0 s: %s\n", BN_bn2hex(sig0.getSig().second));
-	printf("sig1 s: %s\n", BN_bn2hex(sig1.getSig().second));
-	printf("sig2 s: %s\n\n", BN_bn2hex(sig2.getSig().second));
-
 	///////////////////// getting dkg keys and signing regularly /////////////////////
 	sig0.dkg.addPrivateShare(1, sig1.dkg.getPrivateShare());
 	sig0.dkg.addPrivateShare(2, sig2.dkg.getPrivateShare());
@@ -97,9 +159,12 @@ int main(){
 	EC_KEY_set_public_key(key, pubKey);
 	EC_KEY_set_private_key(key, priKey);
 	unsigned char *sig = ECDSA::sign(mess, key);
-	printf("%s\n", (char *)sig);
-	printf("%s%s\n\n", BN_bn2hex(sig2.getSig().first), BN_bn2hex(sig2.getSig().second));
 	
-
+	printf("different signatures due to different k values, if both are valid we are OK!\n");
+	printf("sign %s %s\n", (char *)sig, ECDSA::verify(mess, key, sig) ? "valid" : "invalid");
+	printf("sig0 %s %s\n", sig0.getSig(), ECDSA::verify(mess, key, sig0.getSig()) ? "valid" : "invalid");
+	printf("sig1 %s %s\n", sig1.getSig(), ECDSA::verify(mess, key, sig1.getSig()) ? "valid" : "invalid");
+	printf("sig2 %s %s\n", sig2.getSig(), ECDSA::verify(mess, key, sig2.getSig()) ? "valid" : "invalid");
+	
 	return 0;
 }
