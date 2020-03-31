@@ -24,6 +24,19 @@ void handleErrors(){
 	ERR_print_errors_fp(stdout);
 }
 
+void handleErrorsNet(){
+	perror("");
+}
+
+void handleErrors(const char *c){
+	printf("%s", c);
+	ERR_print_errors_fp(stdout);
+}
+
+void handleErrorsNet(const char *c){
+	perror(c);
+}
+
 unsigned char *randomBytes(long unsigned int num){
 	unsigned char *ret = new unsigned char[num];
 	if(RAND_status() == 1){

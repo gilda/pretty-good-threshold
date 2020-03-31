@@ -1,7 +1,18 @@
-test: bin/ssss.o bin/vss.o bin/aes.o bin/ecdh.o bin/ecies.o bin/sha256.o bin/ecdsa.o bin/pcommit.o bin/dkg.o bin/ot.o bin/mta.o bin/tecdsa.o bin/util.o
+SOURCE = bin/ssss.o bin/vss.o bin/aes.o bin/ecdh.o bin/ecies.o bin/sha256.o bin/ecdsa.o bin/pcommit.o bin/dkg.o bin/ot.o bin/mta.o bin/tecdsa.o bin/util.o bin/network/server.o
+
+test: testComponents testDKG testTECDSA testNet
+
+testComponents: $(SOURCE)
 	g++ -Wall src/test/components.cpp $^ -lssl -lcrypto -o bin/test/components
+
+testDKG: $(SOURCE)
 	g++ -Wall src/test/dkgSim.cpp $^ -lssl -lcrypto -o bin/test/dkgSim
+
+testTECDSA: $(SOURCE)
 	g++ -Wall src/test/tecdsaSim.cpp $^ -lssl -lcrypto -o bin/test/tecdsaSim
+
+testNet: $(SOURCE)
+	g++ -Wall src/test/networkSim.cpp $^ -lssl -lcrypto -o bin/test/networkSim
 
 bin/util.o: src/util/util.h src/util/util.cpp
 	g++ -c -Wall src/util/util.cpp -lssl -lcrypto -o bin/util.o
@@ -41,3 +52,6 @@ bin/mta.o: src/mta/mta.h src/mta/mta.cpp
 
 bin/tecdsa.o: src/tecdsa/tecdsa.h src/tecdsa/tecdsa.cpp
 	g++ -c -Wall src/tecdsa/tecdsa.cpp -lssl -lcrypto -o bin/tecdsa.o
+
+bin/network/server.o: src/network/server/server.h src/network/server/server.cpp
+	g++ -c -Wall src/network/server/server.cpp -o bin/network/server.o
